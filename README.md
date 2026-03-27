@@ -17,7 +17,7 @@
 ## 🤝 How to Contribute
 
 ❗❗Use CLI❗❗LIKE THIS::::
-<img width="871" height="564" alt="Screenshot 2026-03-27 at 16 50 59" src="https://github.com/user-attachments/assets/08360533-7c19-4833-bd21-6e6b7c41b7c7" />
+<img width="637" height="578" alt="Screenshot 2026-03-27 at 16 53 43" src="https://github.com/user-attachments/assets/b3453998-321f-45e8-9032-7e56978e10ee" />
 
 ### 1. Make sure you're in the right directory
 Before doing anything, confirm you're in the project's root folder:
