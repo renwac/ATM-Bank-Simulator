@@ -17,6 +17,7 @@
 ## 🤝 How to Contribute
 
 ❗❗Use CLI❗❗LIKE THIS::::
+
 <img width="637" height="578" alt="Screenshot 2026-03-27 at 16 53 43" src="https://github.com/user-attachments/assets/b3453998-321f-45e8-9032-7e56978e10ee" />
 
 ### 1. Make sure you're in the right directory
