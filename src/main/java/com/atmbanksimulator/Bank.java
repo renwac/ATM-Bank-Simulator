@@ -23,6 +23,31 @@ public class Bank {
         return new BankAccount(accNumber, accPasswd, balance);
     }
 
+    // Factory methods for specialised account types
+    public StudentAccount makeStudentAccount(String accNumber, String accPasswd, int balance) {
+        return new StudentAccount(accNumber, accPasswd, balance);
+    }
+
+    public PrimeAccount makePrimeAccount(String accNumber, String accPasswd, int balance) {
+        return new PrimeAccount(accNumber, accPasswd, balance);
+    }
+
+    public SavingAccount makeSavingAccount(String accNumber, String accPasswd, int balance) {
+        return new SavingAccount(accNumber, accPasswd, balance);
+    }
+
+    // Apply interest to every SavingAccount held in the bank.
+    // Returns the total interest distributed across all saving accounts.
+    public int applyInterestToAll() {
+        int total = 0;
+        for (int i = 0; i < numAccounts; i++) {
+            if (accounts[i] instanceof SavingAccount) {
+                total += ((SavingAccount) accounts[i]).applyInterest();
+            }
+        }
+        return total;
+    }
+
     // a method to add a new bank account to the bank - it returns true if it succeeds
     // or false if it fails (because the bank is 'full')
     public boolean addBankAccount(BankAccount a) {
@@ -51,7 +76,8 @@ public class Bank {
         // Search the accounts array to find a BankAccount with a matching accountNumber and password.
         // - If found, set 'loggedInAccount' to that account and return true.
         // - If not found, reset 'loggedInAccount' to null and return false.
-        for (BankAccount b: accounts) {
+        for (int i = 0; i < numAccounts; i++) {
+            BankAccount b = accounts[i];
             if (b.getAccNumber().equals(accountNumber) && b.getaccPasswd().equals(password)) {
                 // found the right account
                 loggedInAccount = b;

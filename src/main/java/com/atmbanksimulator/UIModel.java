@@ -48,8 +48,6 @@ public class UIModel {
         update();
     }
 
-    // testing notes
-
     // Reset the ATM UIModel after an invalid action or logout:
     // - Set state to STATE_ACCOUNT_NO
     // - Clear the numberPadInput
