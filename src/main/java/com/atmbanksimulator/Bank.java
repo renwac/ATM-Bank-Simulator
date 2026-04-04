@@ -138,4 +138,39 @@ public class Bank {
             return -1; // use -1 as an indicator of an error
         }
     }
+
+    public boolean changePassword(String oldPasswd, String newPasswd){
+        if (!loggedIn()) return false;
+        //make sure old pw matches current account
+        if (!loggedInAccount.getaccPasswd().equals(oldPasswd)){
+            return false; //if it doesnt match
+        }
+        return loggedInAccount.setAccPasswd(newPasswd);
+    }
+
+    //check if account number exists
+    private boolean accountExists(String accNumber){
+        for (int i = 0; i < numAccounts; i++){
+            if (accounts[i].getAccNumber().equals(accNumber)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //create + register new account
+    //0=success 1=dupe 2=bank full
+    public int createNewAccount(String accNumber, String passwd, int balance, String type){
+        if (accountExists(accNumber)) return 1; //duplicate
+        BankAccount newAcc;
+        switch (type.toLowerCase()){
+            case "student": newAcc = makeStudentAccount(accNumber, passwd, balance); break;
+            case "prime": newAcc = makePrimeAccount(accNumber, passwd, balance); break;
+            case "saving": newAcc = makeSavingAccount(accNumber, passwd, balance); break;
+            default: newAcc = makeBankAccount(accNumber, passwd, balance);
+        }
+        return addBankAccount(newAcc) ? 0 : 2; // 0=ok 2=full
+    }
+
+
 }

@@ -20,11 +20,22 @@ public class UIModel {
     private final String STATE_ACCOUNT_NO = "account_no";
     private final String STATE_PASSWORD = "password";
     private final String STATE_LOGGED_IN = "logged_in";
+    private final String STATE_CHANGE_PW_NEW = "change_pw_new";
+    private final String STATE_CHANGE_PW_OLD = "change_pw_old";
+    private final String STATE_NEW_ACC_NUMBER = "new_acc_number";
+    private final String STATE_NEW_ACC_PASSWD = "new_acc_passwd";
+    private final String STATE_NEW_ACC_BALANCE = "new_acc_balance";
+    private final String STATE_NEW_ACC_TYPE = "new_acc_type";
+
 
     // Variables representing the state and data of the ATM UIModel
     private String state = STATE_ACCOUNT_NO;    // Current state of the ATM
     private String accNumber = "";         // Account number being typed
     private String accPasswd = "";         // Password being typed
+    private String oldPasswdInput = "";
+    private String newAccNumber = "";
+    private String newAccPasswd = "";
+    private int newAccBalance = 0;
 
     // Variables shown on the View display
     private String message;                // Message label text
@@ -95,6 +106,28 @@ public class UIModel {
         }
     }
 
+    public void processChangePassword(){
+        //make sure they are logged in
+        if (!state.equals(STATE_LOGGED_IN)){
+            reset("You are not logged in");
+        }
+        else {
+            setState(STATE_CHANGE_PW_OLD);
+            numberPadInput = "";
+            message = "Change Password";
+            result = "Enter your OLD password\nFollowed by \"Ent\"";
+        }
+        update();
+    }
+
+    public void processCreateAccount(){
+        setState(STATE_NEW_ACC_NUMBER);
+        numberPadInput = "";
+        message = "Create New Account";
+        result = "Enter new account number\nFollowed by \"Ent\"";
+        update();
+    }
+
     // Handle the Enter button.
     // This is a more complex method: pressing Enter causes the ATM to change state,
     // progressing from STATE_ACCOUNT_NO → STATE_PASSWORD → STATE_LOGGED_IN,
@@ -139,6 +172,67 @@ public class UIModel {
                     message = "Login failed: Unknown Account/Password";
                     reset(message);
                 }
+                break;
+
+            case STATE_CHANGE_PW_OLD:
+                oldPasswdInput = numberPadInput;
+                numberPadInput = "";
+                setState(STATE_CHANGE_PW_NEW);
+                message = "Old password received";
+                result = "Now enter your NEW password\nFollowed by \"Ent\"";
+                break;
+
+            case STATE_CHANGE_PW_NEW:
+                String newPw = numberPadInput;
+                numberPadInput = "";
+                if (bank.changePassword(oldPasswdInput, newPw)){
+                    setState(STATE_LOGGED_IN);
+                    message = "Password Changed Successfully";
+                    result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)";
+                }
+                else {
+                    setState(STATE_LOGGED_IN);
+                    message = "Password Change Failed";
+                    result = "Old password incorrect or new password invalid";
+                }
+                break;
+
+            case STATE_NEW_ACC_NUMBER:
+                newAccNumber = numberPadInput; numberPadInput ="";
+                setState(STATE_NEW_ACC_PASSWD);
+                message = "Account number saved";
+                result = "Enter new account password\nFollowed by \"Ent\"";
+                break;
+
+            case STATE_NEW_ACC_PASSWD:
+                newAccPasswd = numberPadInput;  numberPadInput = "";
+                setState(STATE_NEW_ACC_BALANCE);
+                message = "Password saved";
+                result = "Enter initial balance\nFollowed by \"Ent\"";
+                break;
+
+            case STATE_NEW_ACC_BALANCE:
+                newAccBalance = parseValidAmount(numberPadInput);  numberPadInput = "";
+                setState(STATE_NEW_ACC_TYPE);
+                message = "Balance saved";
+                result = "Enter type: 0=Standard 1=Student\n2=Prime 3=Saving — then \"Ent\"";
+                break;
+
+            case STATE_NEW_ACC_TYPE:
+                String[] types = {"standard","student","prime","saving"};
+                String chosenType = "standard";
+                try {
+                    int idx = Integer.parseInt(numberPadInput);
+                    if (idx >= 0 && idx < types.length) chosenType = types[idx];
+                } catch (NumberFormatException e) { /* keep default */ }
+                numberPadInput = "";
+                int result_code = bank.createNewAccount(newAccNumber, newAccPasswd, newAccBalance, chosenType);
+                switch (result_code) {
+                    case 0: message = "Account Created!";    result = "Account: " + newAccNumber; break;
+                    case 1: message = "Account already exists"; result = "Choose a different number"; break;
+                    case 2: message = "Bank is full";          result = "Cannot add more accounts"; break;
+                }
+                setState(STATE_ACCOUNT_NO);
                 break;
 
             case STATE_LOGGED_IN:

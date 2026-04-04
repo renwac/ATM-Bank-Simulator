@@ -53,4 +53,23 @@ public class BankAccount {
     public String getaccPasswd() {
         return accPasswd;
     }
+
+//password setter (true if changed successfully)
+    public boolean setAccPasswd(String newPasswd){
+        //new password cant be empty
+        if (newPasswd == null || newPasswd.isEmpty()){
+            return false;
+        }
+        //cant be the same as current password
+        if (newPasswd.equals(this.accPasswd)){
+            return false;
+        }
+        //enforce minimum length (4 digits)
+        if (newPasswd.length() < 4){
+            return false;
+        }
+        accPasswd = newPasswd;
+        return true;
+    }
 }
+
