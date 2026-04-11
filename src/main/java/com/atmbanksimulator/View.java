@@ -25,11 +25,36 @@ class View {
     private ScrollPane scrollPane; // Provides scrollbars around the TextArea
     private GridPane grid;      // Main layout container (grid-based)
     private TilePane buttonPane;// Container for ATM keypad buttons (tiled layout)
+    private Stage window;       // Keep a reference to the current window so we can switch scenes
 
     // start() is called from Main to set up the UI.
     // Important: create controls here (not in the constructor or as field initializers),
     // so that everything is initialized in the correct order.
     public void start(Stage window) {
+        this.window = window;
+        window.setTitle("ATM-Bank Simulator"); //set window title
+        window.setScene(createWelcomeScene());
+        window.show();
+    }
+
+    // Welcome page - this is what the user sees upon starting
+    private Scene createWelcomeScene() {
+        VBox root = new VBox(20); // creates a new window to display welcome screen on
+        root.setStyle("-fx-alignment: center;"); // aligns label and button such that they are centred
+
+        Label title = new Label("Welcome"); // welcome text
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 28)); // font and fontsize for the welcome text to make it clear
+
+        Button startBtn = new Button("Start"); //start button: takes user to the main page once pressed
+        startBtn.setOnAction(e -> window.setScene(createMainScene())); // binds start button so it changes to the main screen
+
+        root.getChildren().addAll(title, startBtn); // implements label and button
+
+        return new Scene(root, W, H);
+    }
+
+    // Main ATM page: login, bal, deposit, withdraw, etc.
+    private Scene createMainScene() {
         // Create the user interface component objects.
         // The ATM UI is organized as a vertical grid with four main parts:
         // 1. A message label
@@ -75,7 +100,7 @@ class View {
                     // non-empty string - make a button
                     Button btn = new Button( text );
                     btn.setOnAction( this::buttonClicked );
-                              // Register event handler: call buttonClicked() whenever this button is pressed
+                    // Register event handler: call buttonClicked() whenever this button is pressed
                     buttonPane.getChildren().add( btn );    // add this button to tiled pane
                 } else {
                     // empty string - make an empty Text element as a spacer
@@ -88,9 +113,24 @@ class View {
         // add the complete GUI to the window and display it
         Scene scene = new Scene(grid, W, H);
         scene.getStylesheets().add("atm.css"); // tell to use our css file
-        window.setScene(scene);
-        window.setTitle("ATM-Bank Simulator"); //set window title
-        window.show();
+        return scene;
+    }
+
+    // Goodbye page shown when Fin is pressed
+    private Scene createGoodbyeScene() {
+        VBox root = new VBox(20); // creates a new window to display goodbye screen on
+        root.setStyle("-fx-alignment: center;"); // aligns label and button such that they are centred
+
+        Label title = new Label("Goodbye"); // goodbye text
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 28)); // font for goodbye text to be easily seen
+
+
+        Button closeBtn = new Button("Close"); // close button
+        closeBtn.setOnAction(e -> window.close()); // binds the close button, so once pressed, the window is closed, and the program is stopped
+
+        root.getChildren().addAll(title, closeBtn); // implements label and button
+
+        return new Scene(root, W, H);
     }
 
     // This is how the View talks to the Controller
@@ -100,8 +140,14 @@ class View {
         // this line asks the event to provide the actual Button object that was clicked
         Button b = ((Button) event.getSource());
         String text = b.getText();   // get the button label
-        System.out.println( "View::buttonClicked: label = "+ text );
-        controller.process( text );  // Pass it to the controller's process method
+        System.out.println( "View::buttonClicked: label = "+ text );  // Pass it to the controller's process method
+
+        if ("Fin".equals(text)) {
+            controller.process(text);
+            window.setScene(createGoodbyeScene());
+        } else {
+            controller.process( text );
+        }
     }
 
     // This method is called by the UIModel whenever the UIModel changes.
@@ -111,8 +157,14 @@ class View {
     // - taResultMsg → shown in the text area (instructions / results)
     public void update(String msg,String tfInputMsg,String taResultMsg)
     {
-        laMsg.setText(msg);
-        tfInput.setText(tfInputMsg);
-        taResult.setText(taResultMsg);
+        if (laMsg != null) {
+            laMsg.setText(msg);
+        }
+        if (tfInput != null) {
+            tfInput.setText(tfInputMsg);
+        }
+        if (taResult != null) {
+            taResult.setText(taResultMsg);
+        }
     }
 }
