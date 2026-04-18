@@ -84,7 +84,7 @@ class View {
         // Empty strings ("") represent blank spaces in the grid.
         String buttonTexts[][] = {
                 {"7",    "8",  "9",  "",  "Dep",   ""},
-                {"4",    "5",  "6",  "",  "W/D",   ""},
+                {"4",    "5",  "6",  "",  "W/D",   "Trf"},
                 {"1",    "2",  "3",  "",  "Bal",   "Fin"},
                 {"CLR",  "0",  "",   "",  "ChgPw", "Ent"},
                 {"",     "",   "",   "",  "NewAcc", ""}  };
