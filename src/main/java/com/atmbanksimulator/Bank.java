@@ -157,7 +157,7 @@ public class Bank {
         return false;
     }
 
-    // 检查账户是否存在
+    //
     public boolean accountValid(String accNumber) {
         for (int i = 0; i < numAccounts; i++) {
             if (accounts[i].getAccNumber().equals(accNumber)) {
@@ -167,7 +167,7 @@ public class Bank {
         return false;
     }
 
-    // 向指定账户存款
+    // deposit to a specific account
     public boolean depositTo(String targetAccount, int amount) {
         for (int i = 0; i < numAccounts; i++) {
             if (accounts[i].getAccNumber().equals(targetAccount)) {
