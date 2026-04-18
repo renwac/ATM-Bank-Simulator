@@ -10,7 +10,8 @@ package com.atmbanksimulator;
 public class UIModel {
     View view; // Reference to the View (part of the MVC setup)
     private Bank bank; // The ATM communicates with this Bank
-
+    private int loginAttempts = 0;
+    public String targetAccount;
     // The ATM UIModel can be in one of three states:
     // 1. Waiting for an account number
     // 2. Waiting for a password
@@ -26,7 +27,8 @@ public class UIModel {
     private final String STATE_NEW_ACC_PASSWD = "new_acc_passwd";
     private final String STATE_NEW_ACC_BALANCE = "new_acc_balance";
     private final String STATE_NEW_ACC_TYPE = "new_acc_type";
-
+    private final String STATE_TRANSFER_ACC = "transfer_acc";
+    private final String STATE_TRANSFER_AMOUNT = "transfer_amount";
 
     // Variables representing the state and data of the ATM UIModel
     private String state = STATE_ACCOUNT_NO;    // Current state of the ATM
@@ -154,23 +156,27 @@ public class UIModel {
                     result = "Now enter your password\nFollowed by \"Ent\"";
                 }
                 break;
-
             case STATE_PASSWORD:
-                    // Waiting for a password
-                    // Save the typed number as accPasswd, clear numberPadInput,
-                    // then contact the bank to attempt login
                 accPasswd = numberPadInput;
                 numberPadInput = "";
-                if ( bank.login(accNumber, accPasswd) )
-                {
-                    // Successful login: change state to STATE_LOGGED_IN and provide instructions
+
+                if (bank.login(accNumber, accPasswd)) {
+                    loginAttempts = 0; // initialise loginAttempt
                     setState(STATE_LOGGED_IN);
                     message = "Logged In";
                     result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)";
                 } else {
-                    // Login failed: reset ATM and display error
-                    message = "Login failed: Unknown Account/Password";
-                    reset(message);
+                    loginAttempts++; // Adds 1 if the password is wrong
+
+                    if (loginAttempts >= 3) {
+                        message = "Too many failed attempts. Returning to start.";
+                        reset(message);
+                        loginAttempts = 0; // reset after 3 trials
+                    } else {
+                        message = "Login failed (" + loginAttempts + "/3)";
+                        result = "Try again\nEnter your password";
+                        setState(STATE_PASSWORD);
+                    }
                 }
                 break;
 
@@ -235,8 +241,44 @@ public class UIModel {
                 setState(STATE_ACCOUNT_NO);
                 break;
 
+            case STATE_TRANSFER_ACC://Afonso
+                targetAccount = numberPadInput;
+                numberPadInput = "";
+                setState(STATE_TRANSFER_AMOUNT);
+                message = "Target account saved";
+                result = "Enter amount\nThen press Ent";
+                break;
+            case STATE_TRANSFER_AMOUNT:
+                int amount = parseValidAmount(numberPadInput);
+                numberPadInput = "";
+
+                if (amount <= 0){
+                    message = "Invalid amount";//Transfer amount cannot be 0;
+                    result = "Try again";
+                    setState(STATE_TRANSFER_AMOUNT);
+                }
+                else if (!bank.accountValid(targetAccount)) {
+                    message = "Target account does not exist";
+                    setState(STATE_LOGGED_IN);
+                }
+                else if (targetAccount.equals(accNumber)) {
+                    message = "Cannot transfer to same account";
+                    setState(STATE_LOGGED_IN);
+                }
+                else if (!bank.withdraw(amount)) {
+                    message = "Insufficient funds";
+                    setState(STATE_LOGGED_IN);
+                }
+                else {
+                    bank.depositTo(targetAccount, amount);
+                    message = "Transfer successful";
+                    result = "Sent: " + amount + " to " + targetAccount;
+                    setState(STATE_LOGGED_IN);
+                }
+                break;
             case STATE_LOGGED_IN:
             default:
+
                 // Do nothing for other states (user is already logged in)
         }
 
@@ -348,6 +390,18 @@ public class UIModel {
     // - Reset the ATM and display an "Invalid Command" message
     public void processUnknownKey(String action) {
         reset("Invalid Command");
+        update();
+    }
+
+    public void processTransfer() {
+        if (!state.equals(STATE_LOGGED_IN)) {
+            reset("You are not logged in");
+        } else {
+            setState(STATE_TRANSFER_ACC);
+            numberPadInput = "";
+            message = "Transfer";
+            result = "Enter target account number\nThen press Ent";
+        }
         update();
     }
 

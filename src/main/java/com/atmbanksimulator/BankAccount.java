@@ -8,7 +8,7 @@ package com.atmbanksimulator;
 public class BankAccount {
     private String accNumber = "";
     private String accPasswd ="";
-    private int balance = 0;
+    private int balance;
 
     public BankAccount() {}
     public BankAccount(String a, String p, int b) {
@@ -71,5 +71,7 @@ public class BankAccount {
         accPasswd = newPasswd;
         return true;
     }
+
+
 }
 

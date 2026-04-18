@@ -41,6 +41,9 @@ public class Controller {
             case "NewAcc":
                 UIModel.processCreateAccount();
                 break;
+            case "Trf":
+                UIModel.processTransfer();
+                break;
             default:
                 UIModel.processUnknownKey(action);
                 break;

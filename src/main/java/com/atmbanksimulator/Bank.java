@@ -9,8 +9,7 @@ public class Bank {
     // ToDO: Optional extension:
     // Improve account management in the Bank class:
     // Replace Array with ArrayList for managing BankAccount objects.
-    // Refactor addBankAccount and login methods to leverage ArrayList.
-
+    // Refactor addBankAccount and login methods to leverage ArrayList.f
     // Instance variables storing bank information
     private int maxAccounts = 10;                       // Maximum number of accounts the bank can hold
     private int numAccounts = 0;                        // Current number of accounts in the bank
@@ -158,6 +157,7 @@ public class Bank {
         return false;
     }
 
+    }
     //create + register new account
     //0=success 1=dupe 2=bank full
     public int createNewAccount(String accNumber, String passwd, int balance, String type){
