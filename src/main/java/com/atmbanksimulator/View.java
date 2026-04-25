@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.media.AudioClip;
 import javafx.scene.text.*;
 import javafx.stage.Stage;
 
@@ -26,12 +27,23 @@ class View {
     private GridPane grid;      // Main layout container (grid-based)
     private TilePane buttonPane;// Container for ATM keypad buttons (tiled layout)
     private Stage window;       // Keep a reference to the current window so we can switch scenes
+    private AudioClip buttonSound;
+
+    private void playButtonSound() {
+        if (buttonSound != null) {
+            buttonSound.play();
+        }
+    }
 
     // start() is called from Main to set up the UI.
     // Important: create controls here (not in the constructor or as field initializers),
     // so that everything is initialized in the correct order.
     public void start(Stage window) {
         this.window = window;
+        var buttonSoundUrl = getClass().getResource("/button.wav");
+        if (buttonSoundUrl != null) {
+            buttonSound = new AudioClip(buttonSoundUrl.toExternalForm());
+        }
         window.setTitle("ATM-Bank Simulator"); //set window title
         window.setScene(createWelcomeScene());
         window.show();
@@ -140,13 +152,14 @@ class View {
         // this line asks the event to provide the actual Button object that was clicked
         Button b = ((Button) event.getSource());
         String text = b.getText();   // get the button label
-        System.out.println( "View::buttonClicked: label = "+ text );  // Pass it to the controller's process method
+        System.out.println("View::buttonClicked: label = " + text);  // Pass it to the controller's process method
+        playButtonSound();
 
         if ("Fin".equals(text)) {
             controller.process(text);
             window.setScene(createGoodbyeScene());
         } else {
-            controller.process( text );
+            controller.process(text);
         }
     }
 
