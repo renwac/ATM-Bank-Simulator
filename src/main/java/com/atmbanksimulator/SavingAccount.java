@@ -25,6 +25,18 @@ public class    SavingAccount extends BankAccount {
         super(accNumber, accPasswd, balance);
     }
 
+    // Returns "saving" to identify this account type when saving to file
+    @Override
+    public String getType() {
+        return "saving";
+    }
+
+    // Warn when the balance is within 50 of the minimum balance requirement
+    @Override
+    public boolean isLowBalance() {
+        return getBalance() < MIN_BALANCE + 50;
+    }
+
     // Returns the annual interest rate for display purposes
     public int getInterestRate() {
         return INTEREST_RATE;

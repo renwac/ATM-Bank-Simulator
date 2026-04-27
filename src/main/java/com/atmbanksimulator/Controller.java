@@ -44,6 +44,9 @@ public class Controller {
             case "Trf":
                 UIModel.processTransfer();
                 break;
+            case "Stmt":
+                UIModel.processMiniStatement();
+                break;
             default:
                 UIModel.processUnknownKey(action);
                 break;

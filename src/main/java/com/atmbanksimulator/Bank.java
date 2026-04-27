@@ -1,20 +1,27 @@
 package com.atmbanksimulator;
 
+import java.io.*;
+import java.util.ArrayList;
+
 // ===== 📚🌐Bank (Domain / Service / Business Logic) =====
 
 // Bank class: a simple implementation of a bank, containing a list of bank accounts
 // and has a currently logged-in account (loggedInAccount).
+// Week 8: adds transaction recording, mini statement, and file persistence.
 public class Bank {
 
     // ToDO: Optional extension:
     // Improve account management in the Bank class:
     // Replace Array with ArrayList for managing BankAccount objects.
-    // Refactor addBankAccount and login methods to leverage ArrayList.f
+    // Refactor addBankAccount and login methods to leverage ArrayList.
     // Instance variables storing bank information
     private int maxAccounts = 10;                       // Maximum number of accounts the bank can hold
     private int numAccounts = 0;                        // Current number of accounts in the bank
     private BankAccount[] accounts = new BankAccount[maxAccounts];  // Array to hold BankAccount objects
     private BankAccount loggedInAccount = null;         // Currently logged-in account ('null' if no one is logged in)
+
+    // File used to persist account balances and transaction history between sessions
+    private static final String DATA_FILE = System.getProperty("user.home") + "/atm_data.txt";
 
     // a method to create new BankAccount - this is known as a 'factory method' and is a more
     // flexible way to do it than just using the 'new' keyword directly.
@@ -105,11 +112,16 @@ public class Bank {
     }
 
     // Attempt to deposit money into the currently logged-in account
-    // by calling the deposit method of the BankAccount object
+    // by calling the deposit method of the BankAccount object.
+    // Records the transaction if successful.
     public boolean deposit(int amount)
     {
         if (loggedIn()) {
-            return loggedInAccount.deposit(amount);
+            boolean success = loggedInAccount.deposit(amount);
+            if (success) {
+                loggedInAccount.addTransaction("Deposit", amount);
+            }
+            return success;
         } else {
             return false;
         }
@@ -117,11 +129,16 @@ public class Bank {
 
 
     // Attempt to withdraw money from the currently logged-in account
-    // by calling the withdraw method of the BankAccount object
+    // by calling the withdraw method of the BankAccount object.
+    // Records the transaction if successful.
     public boolean withdraw(int amount)
     {
         if (loggedIn()) {
-            return loggedInAccount.withdraw(amount);
+            boolean success = loggedInAccount.withdraw(amount);
+            if (success) {
+                loggedInAccount.addTransaction("Withdraw", amount);
+            }
+            return success;
         } else {
             return false;
         }
@@ -136,6 +153,23 @@ public class Bank {
         } else {
             return -1; // use -1 as an indicator of an error
         }
+    }
+
+    // Returns the mini statement for the logged-in account, or an error message if not logged in
+    public String getMiniStatement() {
+        if (loggedIn()) {
+            return loggedInAccount.getMiniStatement();
+        } else {
+            return "Not logged in";
+        }
+    }
+
+    // Returns true if the logged-in account's balance has fallen below its low-balance threshold
+    public boolean isLoggedInLowBalance() {
+        if (loggedIn()) {
+            return loggedInAccount.isLowBalance();
+        }
+        return false;
     }
 
     public boolean changePassword(String oldPasswd, String newPasswd){
@@ -167,15 +201,21 @@ public class Bank {
         return false;
     }
 
-    // deposit to a specific account
+    // Deposit to a specific account (used for incoming transfers).
+    // Records a "Transfer In" transaction on the target account.
     public boolean depositTo(String targetAccount, int amount) {
         for (int i = 0; i < numAccounts; i++) {
             if (accounts[i].getAccNumber().equals(targetAccount)) {
-                return accounts[i].deposit(amount);
+                boolean success = accounts[i].deposit(amount);
+                if (success) {
+                    accounts[i].addTransaction("Transfer In", amount);
+                }
+                return success;
             }
         }
         return false;
     }
+
     //create + register new account
     //0=success 1=dupe 2=bank full
     public int createNewAccount(String accNumber, String passwd, int balance, String type){
@@ -190,5 +230,81 @@ public class Bank {
         return addBankAccount(newAcc) ? 0 : 2; // 0=ok 2=full
     }
 
+    // ===== Persistence =====
 
+    // Save all accounts, balances, and recent transactions to a text file.
+    // Each account is written as: ACCOUNT|type|accNumber|passwd|balance
+    // followed by its transaction lines: TXN|type|amount|balAfter|timestamp
+    public void saveToFile() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(DATA_FILE))) {
+            pw.println("# ATM Bank Simulator Data File");
+            for (int i = 0; i < numAccounts; i++) {
+                BankAccount acc = accounts[i];
+                pw.println("ACCOUNT|" + acc.getType() + "|" + acc.getAccNumber()
+                        + "|" + acc.getaccPasswd() + "|" + acc.getBalance());
+                for (Transaction t : acc.getTransactions()) {
+                    pw.println(t.toSaveLine());
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Bank::saveToFile: could not write to " + DATA_FILE + " – " + e.getMessage());
+        }
+    }
+
+    // Load accounts and transaction history from the data file.
+    // Returns true if the file was found and loaded, false if no file exists.
+    // Existing accounts in the bank are replaced by the loaded data.
+    public boolean loadFromFile() {
+        File file = new File(DATA_FILE);
+        if (!file.exists()) {
+            return false; // no save file yet – caller should add default accounts
+        }
+
+        // Reset account array before loading
+        numAccounts = 0;
+        accounts = new BankAccount[maxAccounts];
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            BankAccount current = null;
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.startsWith("#") || line.isBlank()) continue;
+
+                if (line.startsWith("ACCOUNT|")) {
+                    String[] parts = line.split("\\|", -1);
+                    if (parts.length != 5) continue;
+                    String type    = parts[1];
+                    String accNum  = parts[2];
+                    String passwd  = parts[3];
+                    int    balance;
+                    try { balance = Integer.parseInt(parts[4]); }
+                    catch (NumberFormatException e) { continue; }
+
+                    current = createNewBankAccount(type, accNum, passwd, balance);
+                    addBankAccount(current);
+
+                } else if (line.startsWith("TXN|") && current != null) {
+                    Transaction t = Transaction.fromSaveLine(line);
+                    if (t != null) {
+                        current.addTransactionRecord(t);
+                    }
+                }
+            }
+            System.out.println("Bank::loadFromFile: loaded " + numAccounts + " accounts from " + DATA_FILE);
+            return true;
+        } catch (IOException e) {
+            System.out.println("Bank::loadFromFile: could not read " + DATA_FILE + " – " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Helper: create the right subclass based on a type string (used during file load)
+    private BankAccount createNewBankAccount(String type, String accNum, String passwd, int balance) {
+        switch (type.toLowerCase()) {
+            case "student": return makeStudentAccount(accNum, passwd, balance);
+            case "prime":   return makePrimeAccount(accNum, passwd, balance);
+            case "saving":  return makeSavingAccount(accNum, passwd, balance);
+            default:        return makeBankAccount(accNum, passwd, balance);
+        }
+    }
 }

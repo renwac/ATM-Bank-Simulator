@@ -20,6 +20,18 @@ public class PrimeAccount extends BankAccount {
         super(accNumber, accPasswd, balance);
     }
 
+    // Returns "prime" to identify this account type when saving to file
+    @Override
+    public String getType() {
+        return "prime";
+    }
+
+    // Warn when the balance is deeply into overdraft (below -200)
+    @Override
+    public boolean isLowBalance() {
+        return getBalance() < -200;
+    }
+
     // Returns the overdraft limit for display purposes
     public int getOverdraftLimit() {
         return OVERDRAFT_LIMIT;

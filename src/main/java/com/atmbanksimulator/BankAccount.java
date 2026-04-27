@@ -1,14 +1,21 @@
 package com.atmbanksimulator;
 
+import java.util.ArrayList;
+
 // ===== 📚🌐BankAccount (Domain / Service / Business Logic) =====
 
 // BankAccount class:
 // - Stores instance variables for account number, password, and balance
 // - Provides methods to withdraw, deposit, check balance, etc.
+// - Keeps a rolling list of the last MAX_HISTORY transactions for the mini statement
 public class BankAccount {
     private String accNumber = "";
     private String accPasswd ="";
     private int balance;
+
+    // Maximum number of recent transactions kept per account
+    private static final int MAX_HISTORY = 10;
+    private ArrayList<Transaction> transactions = new ArrayList<>();
 
     public BankAccount() {}
     public BankAccount(String a, String p, int b) {
@@ -54,6 +61,17 @@ public class BankAccount {
         return accPasswd;
     }
 
+    // Returns a string identifying the account type – overridden by each subclass
+    public String getType() {
+        return "standard";
+    }
+
+    // Returns true if the balance is below the low-balance threshold.
+    // Subclasses may override this to use a different threshold.
+    public boolean isLowBalance() {
+        return balance < 50;
+    }
+
 //password setter (true if changed successfully)
     public boolean setAccPasswd(String newPasswd){
         //new password cant be empty
@@ -72,6 +90,42 @@ public class BankAccount {
         return true;
     }
 
+    // Record a transaction in this account's history.
+    // Only the most recent MAX_HISTORY entries are kept.
+    public void addTransaction(String type, int amount) {
+        transactions.add(new Transaction(type, amount, balance));
+        // Keep list trimmed to MAX_HISTORY entries
+        if (transactions.size() > MAX_HISTORY) {
+            transactions.remove(0);
+        }
+    }
 
+    // Load a pre-built Transaction object directly (used when restoring from file)
+    public void addTransactionRecord(Transaction t) {
+        transactions.add(t);
+        if (transactions.size() > MAX_HISTORY) {
+            transactions.remove(0);
+        }
+    }
+
+    // Returns a formatted multi-line mini statement showing recent transactions.
+    // Most recent transaction is shown last (chronological order).
+    public String getMiniStatement() {
+        if (transactions.isEmpty()) {
+            return "No recent transactions";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== Mini Statement ===\n");
+        sb.append("Account: ").append(accNumber).append("\n");
+        for (Transaction t : transactions) {
+            sb.append(t.getTimestamp()).append("  ").append(t.toDisplayLine()).append("\n");
+        }
+        sb.append("Current Balance: £").append(balance);
+        return sb.toString();
+    }
+
+    // Returns the full transaction list (used when saving to file)
+    public ArrayList<Transaction> getTransactions() {
+        return transactions;
+    }
 }
-

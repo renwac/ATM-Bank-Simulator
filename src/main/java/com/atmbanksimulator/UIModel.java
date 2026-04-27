@@ -272,7 +272,11 @@ public class UIModel {
                 else {
                     bank.depositTo(targetAccount, amount);
                     message = "Transfer successful";
-                    result = "Sent: " + amount + " to " + targetAccount;
+                    result = "Sent: £" + amount + " to " + targetAccount;
+                    if (bank.isLoggedInLowBalance()) {
+                        result += "\n⚠ Low balance warning!";
+                    }
+                    bank.saveToFile();
                     setState(STATE_LOGGED_IN);
                 }
                 break;
@@ -330,7 +334,11 @@ public class UIModel {
             if (amount > 0) {
                 if(bank.withdraw( amount )){
                     message = "Withdraw Successful";
-                    result = "Withdrawn: " + numberPadInput;
+                    result = "Withdrawn: £" + amount;
+                    if (bank.isLoggedInLowBalance()) {
+                        result += "\n⚠ Low balance warning!";
+                    }
+                    bank.saveToFile();
                 }
                 else{
                     message = "Withdraw Failed: Insufficient Funds";
@@ -359,7 +367,8 @@ public class UIModel {
             if (amount > 0) {
                 bank.deposit( amount );
                 message = "Deposit Successful";
-                result = "Deposited: " + numberPadInput;
+                result = "Deposited: £" + amount;
+                bank.saveToFile();
             }
             else {
                 message = "Invaild Amount";
@@ -390,6 +399,20 @@ public class UIModel {
     // - Reset the ATM and display an "Invalid Command" message
     public void processUnknownKey(String action) {
         reset("Invalid Command");
+        update();
+    }
+
+    // Handle the Mini Statement button:
+    // - If the user is logged in, display the last 10 transactions for this account
+    // - Otherwise, reset the ATM and display an error message
+    public void processMiniStatement() {
+        if (state.equals(STATE_LOGGED_IN)) {
+            numberPadInput = "";
+            message = "Mini Statement";
+            result = bank.getMiniStatement();
+        } else {
+            reset("You are not logged in");
+        }
         update();
     }
 

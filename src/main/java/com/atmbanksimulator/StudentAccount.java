@@ -43,6 +43,12 @@ package com.atmbanksimulator;
         dailyWithdrawn = 0;
     }
 
+    // Returns "student" to identify this account type when saving to file
+    @Override
+    public String getType() {
+        return "student";
+    }
+
     // Override withdraw to enforce per-transaction limit and daily cap.
     // Returns false (and does NOT deduct) if:
     //   - amount exceeds WITHDRAWAL_LIMIT

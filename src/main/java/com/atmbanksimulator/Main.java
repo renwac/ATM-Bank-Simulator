@@ -14,13 +14,17 @@ public class Main extends Application {
     public static void main( String args[] ) {launch(args);}
 
     public void start(Stage window) {
-        // Create a Bank object and add one account of each type for testing
+        // Create a Bank object.
+        // Try to restore saved data from a previous session first;
+        // if no save file exists, add default test accounts instead.
         Bank bank = new Bank();
-        bank.addBankAccount("10001", "11111", 100);                             // standard BankAccount
-        bank.addBankAccount("10002", "22222", 50);                              // standard BankAccount
-        bank.addBankAccount(bank.makeStudentAccount("20001", "33333", 200));    // StudentAccount
-        bank.addBankAccount(bank.makePrimeAccount("30001", "44444", 500));      // PrimeAccount
-        bank.addBankAccount(bank.makeSavingAccount("40001", "55555", 1000));    // SavingAccount
+        if (!bank.loadFromFile()) {
+            bank.addBankAccount("10001", "11111", 100);                             // standard BankAccount
+            bank.addBankAccount("10002", "22222", 50);                              // standard BankAccount
+            bank.addBankAccount(bank.makeStudentAccount("20001", "33333", 200));    // StudentAccount
+            bank.addBankAccount(bank.makePrimeAccount("30001", "44444", 500));      // PrimeAccount
+            bank.addBankAccount(bank.makeSavingAccount("40001", "55555", 1000));    // SavingAccount
+        }
 
         //UIModel-View-Controller structure setup
         // Create the UIModel, View and Controller objects and link them together
