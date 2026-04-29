@@ -2,12 +2,12 @@
 
 | Week | Contributor |
 |------|------------|
-| Week 3  | Alfie   |
-| Week 4  | Tenn    |
-| Week 5  | George  |
-| Week 6  | Alfonso |
-| Week 7  | Isaiah  |
-| Week 8  | Alfie   |
+| ~~Week 3~~  | ~~Alfie~~   |
+| ~~Week 4~~  | ~~Tenn~~    |
+| ~~Week 5~~  | ~~George~~  |
+| ~~Week 6~~  | ~~Alfonso~~ |
+| ~~Week 7~~  | ~~Isaiah~~  |
+| ~~Week 8~~  | ~~Alfie~~   |
 | Week 9  | Tenn    |
 | Week 10 | George  |
 | Week 11 | Alfonso |
