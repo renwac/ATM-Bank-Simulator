@@ -29,6 +29,12 @@ public class UIModel {
     private final String STATE_NEW_ACC_TYPE = "new_acc_type";
     private final String STATE_TRANSFER_ACC = "transfer_acc";
     private final String STATE_TRANSFER_AMOUNT = "transfer_amount";
+    private final String STATE_CONFIRM_WITHDRAW = "confirm_withdraw";
+    private final String STATE_CONFIRM_TRANSFER = "confirm_transfer";
+
+    private static final int LARGE_WITHDRAW_THRESHOLD = 200;
+    private int pendingWithdrawAmount = 0;
+    private int pendingTransferAmount = 0;
 
     // Variables representing the state and data of the ATM UIModel
     private String state = STATE_ACCOUNT_NO;    // Current state of the ATM
@@ -57,7 +63,7 @@ public class UIModel {
         setState(STATE_ACCOUNT_NO);
         numberPadInput = "";
         message = "Welcome to the ATM";
-        result = "Enter your account number\nFollowed by \"Ent\"";
+        result = "Enter your account number\nFollowed by \"Enter\"";
         update();
     }
 
@@ -69,7 +75,7 @@ public class UIModel {
         setState(STATE_ACCOUNT_NO);
         numberPadInput = "";
         message = msg;
-        result = "Enter your account number\nFollowed by \"Ent\"";
+        result = "Enter your account number\nFollowed by \"Enter\"";
     }
 
     // Change the ATM state and print a debug message whenever the state changes
@@ -98,9 +104,16 @@ public class UIModel {
 
     // Handle the Clear button: reset the current number stored in numberPadInput
     public void processClear() {
-        // Optional extension:
-        // Improve feedback by showing what was cleared depending on the current state.
-        // e.g. if state is STATE_ACCOUNT_NO, display "Account Number cleared: 123"
+        if (state.equals(STATE_CONFIRM_WITHDRAW) || state.equals(STATE_CONFIRM_TRANSFER)) {
+            pendingWithdrawAmount = 0;
+            pendingTransferAmount = 0;
+            numberPadInput = "";
+            setState(STATE_LOGGED_IN);
+            message = "Cancelled";
+            result = "Now enter the amount\nThen press transaction\n(Deposit, Withdraw, or Transfer)";
+            update();
+            return;
+        }
         if (!numberPadInput.isEmpty()) {
             numberPadInput = "";
             message = "Input Cleared";
@@ -117,7 +130,7 @@ public class UIModel {
             setState(STATE_CHANGE_PW_OLD);
             numberPadInput = "";
             message = "Change Password";
-            result = "Enter your OLD password\nFollowed by \"Ent\"";
+            result = "Enter your OLD password\nFollowed by \"Enter\"";
         }
         update();
     }
@@ -126,7 +139,7 @@ public class UIModel {
         setState(STATE_NEW_ACC_NUMBER);
         numberPadInput = "";
         message = "Create New Account";
-        result = "Enter new account number\nFollowed by \"Ent\"";
+        result = "Enter new account number\nFollowed by \"Enter\"";
         update();
     }
 
@@ -153,7 +166,7 @@ public class UIModel {
                     numberPadInput = "";
                     setState(STATE_PASSWORD);
                     message = "Account Number Accepted";
-                    result = "Now enter your password\nFollowed by \"Ent\"";
+                    result = "Now enter your password\nFollowed by \"Enter\"";
                 }
                 break;
             case STATE_PASSWORD:
@@ -164,7 +177,7 @@ public class UIModel {
                     loginAttempts = 0; // initialise loginAttempt
                     setState(STATE_LOGGED_IN);
                     message = "Logged In";
-                    result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)";
+                    result = "Now enter the amount\nThen press transaction\n(Deposit, Withdraw, or Transfer)";
                 } else {
                     loginAttempts++; // Adds 1 if the password is wrong
 
@@ -185,7 +198,7 @@ public class UIModel {
                 numberPadInput = "";
                 setState(STATE_CHANGE_PW_NEW);
                 message = "Old password received";
-                result = "Now enter your NEW password\nFollowed by \"Ent\"";
+                result = "Now enter your NEW password\nFollowed by \"Enter\"";
                 break;
 
             case STATE_CHANGE_PW_NEW:
@@ -194,7 +207,7 @@ public class UIModel {
                 if (bank.changePassword(oldPasswdInput, newPw)){
                     setState(STATE_LOGGED_IN);
                     message = "Password Changed Successfully";
-                    result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)";
+                    result = "Now enter the amount\nThen press transaction\n(Deposit, Withdraw, or Transfer)";
                 }
                 else {
                     setState(STATE_LOGGED_IN);
@@ -207,21 +220,21 @@ public class UIModel {
                 newAccNumber = numberPadInput; numberPadInput ="";
                 setState(STATE_NEW_ACC_PASSWD);
                 message = "Account number saved";
-                result = "Enter new account password\nFollowed by \"Ent\"";
+                result = "Enter new account password\nFollowed by \"Enter\"";
                 break;
 
             case STATE_NEW_ACC_PASSWD:
                 newAccPasswd = numberPadInput;  numberPadInput = "";
                 setState(STATE_NEW_ACC_BALANCE);
                 message = "Password saved";
-                result = "Enter initial balance\nFollowed by \"Ent\"";
+                result = "Enter initial balance\nFollowed by \"Enter\"";
                 break;
 
             case STATE_NEW_ACC_BALANCE:
                 newAccBalance = parseValidAmount(numberPadInput);  numberPadInput = "";
                 setState(STATE_NEW_ACC_TYPE);
                 message = "Balance saved";
-                result = "Enter type: 0=Standard 1=Student\n2=Prime 3=Saving — then \"Ent\"";
+                result = "Enter type: 0=Standard 1=Student\n2=Prime 3=Saving — then \"Enter\"";
                 break;
 
             case STATE_NEW_ACC_TYPE:
@@ -246,7 +259,7 @@ public class UIModel {
                 numberPadInput = "";
                 setState(STATE_TRANSFER_AMOUNT);
                 message = "Target account saved";
-                result = "Enter amount\nThen press Ent";
+                result = "Enter amount\nThen press Enter";
                 break;
             case STATE_TRANSFER_AMOUNT:
                 int amount = parseValidAmount(numberPadInput);
@@ -265,20 +278,35 @@ public class UIModel {
                     message = "Cannot transfer to same account";
                     setState(STATE_LOGGED_IN);
                 }
-                else if (!bank.withdraw(amount)) {
-                    message = "Insufficient funds";
-                    setState(STATE_LOGGED_IN);
-                }
                 else {
-                    bank.depositTo(targetAccount, amount);
+                    pendingTransferAmount = amount;
+                    setState(STATE_CONFIRM_TRANSFER);
+                    message = "Confirm Transfer";
+                    result = "Send £" + amount + " to " + targetAccount + "?\nPress Enter to confirm\nPress CLR to cancel";
+                }
+                break;
+
+            case STATE_CONFIRM_WITHDRAW:
+                numberPadInput = "";
+                executeWithdraw(pendingWithdrawAmount);
+                pendingWithdrawAmount = 0;
+                break;
+
+            case STATE_CONFIRM_TRANSFER:
+                numberPadInput = "";
+                if (!bank.withdraw(pendingTransferAmount)) {
+                    message = "Insufficient funds";
+                } else {
+                    bank.depositTo(targetAccount, pendingTransferAmount);
                     message = "Transfer successful";
-                    result = "Sent: £" + amount + " to " + targetAccount;
+                    result = "Sent: £" + pendingTransferAmount + " to " + targetAccount;
                     if (bank.isLoggedInLowBalance()) {
                         result += "\n⚠ Low balance warning!";
                     }
                     bank.saveToFile();
-                    setState(STATE_LOGGED_IN);
                 }
+                pendingTransferAmount = 0;
+                setState(STATE_LOGGED_IN);
                 break;
             case STATE_LOGGED_IN:
             default:
@@ -332,22 +360,19 @@ public class UIModel {
         if (state.equals(STATE_LOGGED_IN)) {
             int amount = parseValidAmount(numberPadInput);
             if (amount > 0) {
-                if(bank.withdraw( amount )){
-                    message = "Withdraw Successful";
-                    result = "Withdrawn: £" + amount;
-                    if (bank.isLoggedInLowBalance()) {
-                        result += "\n⚠ Low balance warning!";
-                    }
-                    bank.saveToFile();
-                }
-                else{
-                    message = "Withdraw Failed: Insufficient Funds";
-                    result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)";
+                if (amount >= LARGE_WITHDRAW_THRESHOLD) {
+                    pendingWithdrawAmount = amount;
+                    numberPadInput = "";
+                    setState(STATE_CONFIRM_WITHDRAW);
+                    message = "Confirm Withdraw";
+                    result = "Withdraw £" + amount + "?\nPress Enter to confirm\nPress CLR to cancel";
+                } else {
+                    executeWithdraw(amount);
                 }
             }
             else{
                 message = "Invalid Amount";
-                result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)";
+                result = "Now enter the amount\nThen press transaction\n(Deposit, Withdraw, or Transfer)";
             }
             numberPadInput = "";
         }
@@ -355,6 +380,21 @@ public class UIModel {
             reset("You are not logged in");
         }
         update();
+    }
+
+    private void executeWithdraw(int amount) {
+        if (bank.withdraw(amount)) {
+            message = "Withdraw Successful";
+            result = "Withdrawn: £" + amount;
+            if (bank.isLoggedInLowBalance()) {
+                result += "\n⚠ Low balance warning!";
+            }
+            bank.saveToFile();
+        } else {
+            message = "Withdraw Failed: Insufficient Funds";
+            result = "Now enter the amount\nThen press transaction\n(Deposit, Withdraw, or Transfer)";
+        }
+        setState(STATE_LOGGED_IN);
     }
 
     // Handle the Deposit button:
@@ -372,7 +412,7 @@ public class UIModel {
             }
             else {
                 message = "Invaild Amount";
-                result = "Now enter the amount\nThen press transaction\n(Dep = Deposit, W/D = Withdraw)";
+                result = "Now enter the amount\nThen press transaction\n(Deposit, Withdraw, or Transfer)";
             }
             numberPadInput = "";
         }
@@ -423,7 +463,7 @@ public class UIModel {
             setState(STATE_TRANSFER_ACC);
             numberPadInput = "";
             message = "Transfer";
-            result = "Enter target account number\nThen press Ent";
+            result = "Enter target account number\nThen press Enter";
         }
         update();
     }

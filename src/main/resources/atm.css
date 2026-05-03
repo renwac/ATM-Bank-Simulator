@@ -12,10 +12,21 @@
     -fx-padding: 16;
 }
 
-/* ── Button grid ── */
-#Buttons {
-    -fx-pref-columns: 6;
-    -fx-pref-tile-width: 72;
+/* ── Numpad (left) ── */
+#Numpad {
+    -fx-pref-columns: 3;
+    -fx-pref-tile-width: 70;
+    -fx-pref-tile-height: 60;
+    -fx-hgap: 6;
+    -fx-vgap: 6;
+    -fx-padding: 12 0 0 0;
+}
+
+/* ── Action buttons (right) ── */
+#Actions {
+    -fx-pref-columns: 2;
+    -fx-pref-tile-width: 90;
+    -fx-pref-tile-height: 60;
     -fx-hgap: 6;
     -fx-vgap: 6;
     -fx-padding: 12 0 0 0;
@@ -47,32 +58,67 @@
 
 /* ── Number buttons ── */
 .num-button {
-    -fx-background-color: #1e2840;
-    -fx-border-color: #3a4570;
+    -fx-background-color: #4a6fa5;
+    -fx-border-color: #6b8fc7;
+    -fx-text-fill: #ffffff;
+    -fx-min-width: 56px;
+    -fx-min-height: 56px;
+    -fx-pref-width: 56px;
+    -fx-pref-height: 56px;
+    -fx-max-width: 56px;
+    -fx-max-height: 56px;
+    -fx-background-radius: 28px;
+    -fx-border-radius: 28px;
+    -fx-padding: 0;
 }
-.num-button:hover { -fx-background-color: #2a3555; }
+.num-button:hover { -fx-background-color: #5a7fb5; }
+.num-button:pressed { -fx-background-color: #3a5f95; }
 
 /* ── Transaction buttons ── */
 .action-button {
     -fx-background-color: #1a3a5c;
     -fx-border-color: #2a6090;
     -fx-text-fill: #7ec8f8;
+    -fx-min-width: 90px;
+    -fx-pref-width: 90px;
 }
 .action-button:hover { -fx-background-color: #2a4a6c; }
 
-/* ── Danger buttons (CLR, Fin) ── */
+/* ── Danger buttons (Fin) ── */
 .danger-button {
     -fx-background-color: #3a1a1a;
     -fx-border-color: #703030;
     -fx-text-fill: #f87878;
+    -fx-min-width: 90px;
+    -fx-pref-width: 90px;
 }
 .danger-button:hover { -fx-background-color: #4a2a2a; }
+
+/* ── Clear button (CLR) — circular like number buttons ── */
+.clear-button {
+    -fx-background-color: #3a1a1a;
+    -fx-border-color: #703030;
+    -fx-text-fill: #f87878;
+    -fx-min-width: 56px;
+    -fx-min-height: 56px;
+    -fx-pref-width: 56px;
+    -fx-pref-height: 56px;
+    -fx-max-width: 56px;
+    -fx-max-height: 56px;
+    -fx-background-radius: 28px;
+    -fx-border-radius: 28px;
+    -fx-padding: 0;
+}
+.clear-button:hover { -fx-background-color: #4a2a2a; }
+.clear-button:pressed { -fx-background-color: #2a1010; }
 
 /* ── Confirm button (Ent) ── */
 .confirm-button {
     -fx-background-color: #1a3a1e;
     -fx-border-color: #306040;
     -fx-text-fill: #78f8a0;
+    -fx-min-width: 90px;
+    -fx-pref-width: 90px;
 }
 .confirm-button:hover { -fx-background-color: #2a4a2e; }
 

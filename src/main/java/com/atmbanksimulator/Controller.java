@@ -20,28 +20,28 @@ public class Controller {
             case "CLR":
                 UIModel.processClear();
                 break;
-            case "Ent":
+            case "Enter":
                 UIModel.processEnter();
                 break;
-            case "W/D":
+            case "Withdraw":
                 UIModel.processWithdraw();
                 break;
-            case "Dep":
+            case "Deposit":
                 UIModel.processDeposit();
                 break;
-            case "Bal":
+            case "Balance":
                 UIModel.processBalance();
                 break;
-            case "Fin":
+            case "Finish":
                 UIModel.processFinish();
                 break;
-            case "ChgPw":
+            case "ChangePw":
                 UIModel.processChangePassword();
                 break;
             case "NewAcc":
                 UIModel.processCreateAccount();
                 break;
-            case "Trf":
+            case "Transfer":
                 UIModel.processTransfer();
                 break;
             case "Stmt":

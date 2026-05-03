@@ -16,8 +16,8 @@ import java.util.function.Function;
 // It does not know anything about business logic;
 // it only updates the display when notified by the UIModel.
 class View {
-    int H = 620;         // Height of window pixels
-    int W = 540;         // Width  of window pixels
+    int H = 600;         // Height of window pixels
+    int W = 460;         // Width  of window pixels
 
     Controller controller; // Reference to the Controller (part of the MVC setup)
 
@@ -103,11 +103,13 @@ class View {
         // 4. A tiled panel of buttons
         grid = new GridPane(); // top layout
         grid.setId("Layout");  // assign an id to be used in css file
-        buttonPane = new TilePane(); //
-        buttonPane.setId("Buttons"); // assign an id to be used in css file
+        buttonPane = new TilePane(); // kept for css compatibility (not added to scene)
+        buttonPane.setId("Buttons");
 
         // controls
         laMsg = new Label("Welcome to Bank-ATM");  // Message bar at the top
+        laMsg.setMaxWidth(Double.MAX_VALUE);
+        laMsg.setAlignment(javafx.geometry.Pos.CENTER);
         grid.add(laMsg, 0, 0);         // Add to GUI at the top
 
         tfInput = new TextField();     // text field for numbers
@@ -122,49 +124,70 @@ class View {
         scrollPane.setFitToHeight(true);
         grid.add( scrollPane, 0, 2);    // add the scrolling window to GUI on third row
 
-        // Define the button layout as a 2D array of text labels.
-        // Empty strings ("") represent blank spaces in the grid.
-        String buttonTexts[][] = {
-                {"7",    "8",  "9",  "",  "Dep",    ""},
-                {"4",    "5",  "6",  "",  "W/D",    "Trf"},
-                {"1",    "2",  "3",  "",  "Bal",    "Fin"},
-                {"CLR",  "0",  "",   "",  "ChgPw",  "Ent"},
-                {"",     "",   "",   "",  "NewAcc", ""}  };
+        // Numpad on the left (3 cols), action buttons on the right (2 cols),
+        // joined by a small gap inside an HBox.
+        String numpadTexts[][] = {
+                {"7",   "8", "9"},
+                {"4",   "5", "6"},
+                {"1",   "2", "3"},
+                {"CLR", "0", ""}
+        };
+        String actionTexts[][] = {
+                {"Deposit",  "NewAcc"},
+                {"Withdraw", "Transfer"},
+                {"Balance",  "ChangePw"},
+                {"Finish",   "Enter"}
+        };
 
         Function<String, String> styleFor = label -> {
             switch (label) {
                 case "0": case "1": case "2": case "3":
                 case "4": case "5": case "6": case "7":
                 case "8": case "9":  return "num-button";
-                case "Dep": case "W/D": case "Bal":
-                case "Trf": case "ChgPw": case "NewAcc": return "action-button";
-                case "CLR": case "Fin":  return "danger-button";
-                case "Ent":              return "confirm-button";
+                case "Deposit": case "Withdraw": case "Balance":
+                case "Transfer": case "ChangePw": case "NewAcc": return "action-button";
+                case "CLR":     return "clear-button";
+                case "Finish":  return "danger-button";
+                case "Enter":   return "confirm-button";
                 default:                 return "";
             }
         };
 
-        // Build the button panel, loop through the array,
-        // - For non-empty strings, create a Button
-        // - For empty strings, add an empty Text element as a spacer
-        // Add all elements to the buttonPane (a tiled pane),
-        // then place the buttonPane into the main grid as the fourth row.
-        for (String[] row : buttonTexts) {
+        TilePane numpadPane = new TilePane();
+        numpadPane.setId("Numpad");
+        for (String[] row : numpadTexts) {
             for (String text : row) {
                 if (!text.isEmpty()) {
                     Button btn = new Button(text);
                     btn.setOnAction(this::buttonClicked);
-                    String styleClass = styleFor.apply(text);
-                    if (!styleClass.isEmpty()) {
-                        btn.getStyleClass().add(styleClass);
-                    }
-                    buttonPane.getChildren().add(btn);
+                    String sc = styleFor.apply(text);
+                    if (!sc.isEmpty()) btn.getStyleClass().add(sc);
+                    numpadPane.getChildren().add(btn);
                 } else {
-                    buttonPane.getChildren().add(new Text());
+                    numpadPane.getChildren().add(new Text());
                 }
             }
         }
-        grid.add(buttonPane,0,3); // add the tiled pane of buttons to the main grid
+
+        TilePane actionPane = new TilePane();
+        actionPane.setId("Actions");
+        for (String[] row : actionTexts) {
+            for (String text : row) {
+                if (!text.isEmpty()) {
+                    Button btn = new Button(text);
+                    btn.setOnAction(this::buttonClicked);
+                    String sc = styleFor.apply(text);
+                    if (!sc.isEmpty()) btn.getStyleClass().add(sc);
+                    actionPane.getChildren().add(btn);
+                } else {
+                    actionPane.getChildren().add(new Text());
+                }
+            }
+        }
+
+        HBox bottomRow = new HBox(20, numpadPane, actionPane);
+        bottomRow.setAlignment(javafx.geometry.Pos.CENTER);
+        grid.add(bottomRow, 0, 3);
 
         // add the complete GUI to the window and display it
         Scene scene = new Scene(grid, W, H);
@@ -224,7 +247,7 @@ class View {
         System.out.println("View::buttonClicked: label = " + text);  // Pass it to the controller's process method
         playButtonSound();
 
-        if ("Fin".equals(text)) {
+        if ("Finish".equals(text)) {
             controller.process(text);
             window.setScene(createGoodbyeScene());
         } else {
