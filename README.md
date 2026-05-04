@@ -8,7 +8,7 @@
 | ~~Week 6~~  | ~~Alfonso~~ |
 | ~~Week 7~~  | ~~Isaiah~~  |
 | ~~Week 8~~  | ~~Alfie~~   |
-| Week 9  | Tenn    |
+| ~~Week 9~~  | ~~Tenn~~    |
 | Week 10 | George  |
 | Week 11 | Alfonso |
 
